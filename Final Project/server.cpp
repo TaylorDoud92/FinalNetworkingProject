@@ -66,7 +66,7 @@ int main(int argc, int argv[]) {
 						formattedStr = incomingStr.substr(0,63);	//substring a portion of the string to be sent to the client
 						convertBinary(asciiSum(formattedStr));		//Get sum of ascii characters and convert it to binary for parity bit
 																	//TODO Find out how to attach parity bit to
-						data_sock <<
+//						data_sock << data;
 					}
 
 
