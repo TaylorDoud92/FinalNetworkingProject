@@ -11,10 +11,14 @@
 
 class Frame {
 public:
-	Frame( std::string characters, char checkSum, char parity);
-	virtual ~Frame( std::string characters, char checkSum, char parity);
+	Frame(std::string characters, int checkSum, int parity);
+	Frame();
+	virtual ~Frame();
 
-private:
+	int asciiSum();
+	int convertBinary(int i);
+	bool compareParity();
+
 	std::string characters;
 	char checkSum;
 	char parity;

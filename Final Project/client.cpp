@@ -5,57 +5,61 @@
 #include <bitset>
 #include "Frame.h"
 
-int asciiSum(std::string s){
-	int sum = 0;
-	for(int i=0;i < s.length();i++){
-		sum = sum + static_cast<int>(s[i]);
-	}
-	return sum;
-}
-
-int convertBinary(int i){
-	int sum = 0;
-	while(i){
-		sum += i & 1;
-		i >>=1;
-	}
-	return sum;
-}
-
 int main(int argc, int argv[]) {
 	
 	std::string ipaddress;
+	std::cout << "Please Enter IP address of server" << "\n";
+//	std::getline(std::cin,ipaddress);
+	std::cout << "We're past getLine";
 
 	try {
-
-		std::cout << "Please Enter IP address of server" << "/n";
-		std::cin >> ipaddress;
 
 		// Replace "localhost" with the hostname
 		// that you're running your server.
 		ClientSocket dataChannel("localhost", 30000);
-		ClientSocket ackChannel("localhost", 30000);
-		
-		
-		std::string reply;
+		ClientSocket ackChannel("localhost", 30001);
 
+		Frame incomingFrame;
+		Frame sendingFrame;
+		
+		std::string fileName;
+		std::string incomingLine;
+		std::string outgoingLine;
+
+		std::getline(std::cin, fileName);
+
+		try{
+			dataChannel << fileName;
+		} catch (SocketException& e){
+			std::cout << "Exception was caught:" << e.description() << "\n";
+		}
 		// Usually in real applications, the following
 		// will be put into a loop.
-		try {
 
-			dataChannel << "Test message.";
-			dataChannel >> reply;
+		while(true){
 
-		} catch (SocketException&) {
+				try {
+					dataChannel >> incomingLine;
+
+					incomingFrame.characters = incomingLine.substr(0,incomingLine.size()-1);
+					incomingFrame.parity = incomingLine.back();
+					incomingFrame.asciiSum();
+
+					if(incomingFrame.compareParity()){
+						ackChannel << "ACK";
+						std::cout << incomingFrame.characters;
+					} else {
+						ackChannel << "NAK";
+					}
+
+				} catch (SocketException&) {
+
+				}
+
 		}
 
-		std::cout << "We received this response from the server:\n\"" << reply
-				<< "\"\n";
-
 	} catch (SocketException& e) {
-
 		std::cout << "Exception was caught:" << e.description() << "\n";
-
 	}
 
 	return 0;
