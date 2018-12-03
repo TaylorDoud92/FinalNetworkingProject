@@ -10,6 +10,10 @@ using namespace std;
 int main(int argc, int argv[]) {
 
 	Frame incomingFrame;
+	Frame outgoingFrame;
+	int counter = 0;
+	std::string ack;
+	srand(5);
 
 	cout << "running....\n";
 
@@ -19,6 +23,7 @@ int main(int argc, int argv[]) {
 		ServerSocket dataChannel(30000);
 
 		ServerSocket ackChannel(30001);
+		string fileName;
 
 		cout << "Created Server Socket... \n";
 
@@ -36,38 +41,56 @@ int main(int argc, int argv[]) {
 			// with the client.
 
 			try {
-				string fileName;									//Create a string to hold the incoming fileName
-				data_sock >> incomingFrame;							//Pass the fileName from the client socket to the Server
-				std::cout << incomingFrame.characters;
-//				string incomingStr;									//Variable to contain our incoming line
-//				string formattedStr;								//Variable to contain a section of our formatedline
-//
-//				ifstream inFile(fileName);							//Create input file stream to grab lines from file
-//
-//				while (getline(inFile, incomingStr)) {				//Start pulling lines from file
-//
-//					while(incomingStr.length() > 64){				//Loop as long as incoming string is longer then 64 characters
-//						formattedStr = incomingStr.substr(0,63);	//substring a portion of the string to be sent to the client
-//						convertBinary(asciiSum(formattedStr));		//Get sum of ascii characters and convert it to binary for parity bit
-//																	//TODO Find out how to attach parity bit to
-////						data_sock << data;
-//					}
-//
-//
-//
-//					if(incomingStr.length() > 64){					//Check to see if line is greater then 64 characters long.
-//						formattedStr = incomingStr.substr(0,63);
-//					} else {
-//						formattedStr = incomingStr.substr(0,incomingStr.length()-1);
-//					}
-//
-//
-//
-//
-//					data_sock << fileName;
-//				}
-//				inFile.close();
-			} catch (SocketException&) {
+				data_sock >> fileName;								//Pass the fileName from the client socket to the Server
+				string incomingStr;									//Variable to contain our incoming line
+				string formattedStr;								//Variable to contain a section of our formatedline
+
+				ifstream inFile(fileName);							//Create input file stream to grab lines from file
+
+				while (getline(inFile, incomingStr)) {							//Start pulling lines from file
+
+					while(incomingStr.length() > 64){							//Loop as long as incoming string is longer then 64 characters
+						outgoingFrame.characters = incomingStr.substr(0,63);	//substring a portion of the string to be sent to the client
+						outgoingFrame.asciiSum();									//Get sum of ascii characters and convert it to binary for parity bit
+
+						if(rand() != 5 || counter != 5){
+							if(outgoingFrame.convertBinary(outgoingFrame.checkSum)%2 == 0){
+								outgoingFrame.parity = 0;
+							} else {
+								outgoingFrame.parity = 1;
+							}
+							data_sock << outgoingFrame.characters + std::to_string(outgoingFrame.parity);
+							counter++;
+						} else {
+							if(outgoingFrame.convertBinary(outgoingFrame.checkSum)%2 == 0){
+								outgoingFrame.parity = 1;
+							} else {
+								outgoingFrame.parity = 0;
+							}
+							counter = 0;
+						}
+						ack_sock >> ack;
+						if(ack == "NAK"){
+							if(outgoingFrame.convertBinary(outgoingFrame.checkSum)%2 == 0){
+								outgoingFrame.parity = 0;
+							} else {
+								outgoingFrame.parity = 1;
+							}
+							data_sock << outgoingFrame.characters + std::to_string(outgoingFrame.parity);
+						}
+					}
+					outgoingFrame.characters = incomingStr.substr(0,incomingStr.length()-1);
+					outgoingFrame.asciiSum();
+					if(outgoingFrame.convertBinary(outgoingFrame.checkSum)%2 == 0){
+						outgoingFrame.parity = 0;
+					} else {
+						outgoingFrame.parity = 1;
+					}
+					data_sock << outgoingFrame.characters + std::to_string(outgoingFrame.parity);
+				}
+				inFile.close();
+			} catch (SocketException& e) {
+				std::cout << "Exception was caught:" << e.description() << "\nExiting.\n";
 			}
 		}
 	} catch (SocketException& e) {
