@@ -15,8 +15,8 @@ Frame::Frame(std::string characters, int checkSum, int parity) {
 
 Frame::Frame(){
 	Frame::characters = "";
-	Frame::parity = '0';
-	Frame::checkSum = '0';
+	Frame::parity = 0;
+	Frame::checkSum = 0;
 }
 
 Frame::~Frame() {

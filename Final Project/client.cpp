@@ -2,15 +2,20 @@
 #include "SocketException.h"
 #include <iostream>
 #include <string>
-#include <bitset>
-#include <thread>
-#include <chrono>
+#include <vector>
 #include "Frame.h"
+
+using namespace std;
+
+void sendConfirmation() {
+
+}
 
 int main(int argc, int argv[]) {
 	
+
+	vector<Frame> frameList;
 	Frame incomingFrame;
-	Frame sendingFrame;
 
 	std::string fileName;
 	std::string incomingLine;
@@ -32,17 +37,19 @@ int main(int argc, int argv[]) {
 		dataChannel << fileName;
 
 		while(true){
+			std::cout << "waiting for incoming\n";
 			dataChannel >> incomingLine;
-			std::cout << incomingLine;
-			std::this_thread::sleep_for(std::chrono::seconds(2));
+			incomingFrame.characters = incomingLine.substr(0,64);
+//			incomingFrame.parity = incomingLine.back();
+//			frameList.push_back(incomingFrame);
+			if((incomingFrame.convertBinary(incomingFrame.checkSum)+incomingFrame.parity)%2 == 0){
+				ackChannel << "ACK";
+			} else {
+				ackChannel << "NAK";
+			}
+//			std::cout << "received Line" << "\n";
+			std::cout << incomingLine << "\n";
 		}
-
-		try{
-			dataChannel << fileName;
-		} catch (SocketException& e){
-			std::cout << "Exception was caught:" << e.description() << "\n";
-		}
-
 
 //		while(true){
 //				try {
